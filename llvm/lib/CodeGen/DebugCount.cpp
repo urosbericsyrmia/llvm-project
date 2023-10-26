@@ -25,6 +25,7 @@ char DebugCount::ID = 0;
 
 bool DebugCount::runOnMachineFunction(MachineFunction &MF) {
     outs() << MF.getName() << "\n";
+    errs() << MF.getName() << "\n";
     return true;
 }
 
@@ -35,7 +36,7 @@ namespace llvm {
 
 INITIALIZE_PASS(DebugCount, DEBUG_COUNT_NAME, DEBUG_COUNT_DESC, false, false)
 
-FunctionPass *llvm::createDebugCount() {
+MachineFunctionPass *llvm::createDebugCount() {
   return new DebugCount();
 }
 

@@ -24,6 +24,7 @@ void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeBranchFolderPassPass(Registry);
   initializeBranchRelaxationPass(Registry);
   initializeBreakFalseDepsPass(Registry);
+  initializeDebugCountPass(Registry);
   initializeCallBrPreparePass(Registry);
   initializeCFGuardLongjmpPass(Registry);
   initializeCFIFixupPass(Registry);
