@@ -1,10 +1,9 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
 
-#define DEBUG_COUNT_DESC "Debug Count"
-#define DEBUG_COUNT_NAME "debug-count"
+#define DEBUG_COUNT_NAME "Debug Count"
+#define DEBUG_COUNT_ARG "debug-count"
 
 using namespace llvm;
 
@@ -19,12 +18,47 @@ public:
     static char ID;
 private:
     StringRef getPassName() const override {
-        return DEBUG_COUNT_DESC;
+        return DEBUG_COUNT_NAME;
     }
 };
 
 bool DebugCount::runOnMachineFunction(MachineFunction &MF) {
-    outs() << MF.getName() << "\n";
+    unsigned countDbgValue = 0;
+    unsigned countDbgValueList = 0;
+    unsigned countDbgLabel = 0;
+    unsigned countDbgPHI = 0;
+    unsigned countDbgInstrRef = 0;
+    
+    for (MachineFunction::iterator itMF = MF.begin(); itMF != MF.end(); itMF++) {
+        MachineBasicBlock& MBB = *itMF;
+        for (MachineBasicBlock::iterator itMBB = MBB.begin(); itMBB != MBB.end(); itMBB++) {
+            MachineInstr& MI = *itMBB;
+
+            if (MI.isNonListDebugValue()) {
+                countDbgValue++;
+            }
+            else if (MI.isDebugValueList()) {
+                countDbgValueList++;
+            }
+            else if (MI.isDebugLabel()) {
+                countDbgLabel++;
+            }
+            else if (MI.isDebugPHI()) {
+                countDbgPHI++;
+            }
+            else if (MI.isDebugRef()) {
+                countDbgInstrRef++;
+            }
+        }
+    }
+
+    errs() << "Function: " << MF.getName() << "\n";
+    errs() << "\tDBG_VALUE: " << countDbgValue << "\n";
+    errs() << "\tDBG_VALUE_LIST: " << countDbgValueList << "\n";
+    errs() << "\tDBG_LABEL: " << countDbgLabel << "\n";
+    errs() << "\tDBG_PHI: " << countDbgPHI << "\n";
+    errs() << "\tDBG_INSTR_REF: " << countDbgInstrRef << "\n";
+
     return true;
 }
 
@@ -33,7 +67,7 @@ bool DebugCount::runOnMachineFunction(MachineFunction &MF) {
 char DebugCount::ID = 0;
 char &llvm::DebugCountID = DebugCount::ID;
 
-INITIALIZE_PASS(DebugCount, DEBUG_COUNT_NAME, DEBUG_COUNT_DESC, false, false)
+INITIALIZE_PASS(DebugCount, DEBUG_COUNT_ARG, DEBUG_COUNT_NAME, false, false)
 
 MachineFunctionPass *llvm::createDebugCount() {
     return new DebugCount();
