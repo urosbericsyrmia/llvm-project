@@ -1,8 +1,10 @@
+#include "llvm/CodeGen/Passes.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 
-#define DEBUG_COUNT_DESC "X86 Debug Count"
-#define DEBUG_COUNT_NAME "x86-debug-count"
+#define DEBUG_COUNT_DESC "Debug Count"
+#define DEBUG_COUNT_NAME "debug-count"
 
 using namespace llvm;
 
@@ -21,23 +23,18 @@ private:
     }
 };
 
-char DebugCount::ID = 0;
-
 bool DebugCount::runOnMachineFunction(MachineFunction &MF) {
     outs() << MF.getName() << "\n";
-    errs() << MF.getName() << "\n";
     return true;
 }
 
 } // end anonymous namespace
 
-
-namespace llvm {
+char DebugCount::ID = 0;
+char &llvm::DebugCountID = DebugCount::ID;
 
 INITIALIZE_PASS(DebugCount, DEBUG_COUNT_NAME, DEBUG_COUNT_DESC, false, false)
 
 MachineFunctionPass *llvm::createDebugCount() {
-  return new DebugCount();
-}
-
+    return new DebugCount();
 }
