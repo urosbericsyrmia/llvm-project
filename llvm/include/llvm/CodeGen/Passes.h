@@ -606,9 +606,13 @@ namespace llvm {
   /// Lowers KCFI operand bundles for indirect calls.
   FunctionPass *createKCFIPass();
 
-  MachineFunctionPass* createDebugCount();
+  MachineFunctionPass *createDebugCount();
 
   extern char &DebugCountID;
+
+  MachineFunctionPass *createDebugDelete();
+
+  extern char &DebugDeleteID;
 
 } // End llvm namespace
 
