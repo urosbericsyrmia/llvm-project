@@ -435,7 +435,8 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                     }
                     (*beginningIt).eraseFromParent();
 
-                    continue;
+                    state = ExpressionOptimizerState::Initial;
+                    continue;   // needed because itBB is already increased
                 }
                 state = ExpressionOptimizerState::Initial;
                 break;
