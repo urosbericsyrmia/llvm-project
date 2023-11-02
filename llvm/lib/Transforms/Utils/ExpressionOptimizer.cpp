@@ -438,6 +438,7 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
 
                     while (endIt != beginningIt) {
                         BasicBlock::iterator currentIt = endIt--;
+                        (*currentIt).replaceAllUsesWith(UndefValue::get((*currentIt).getType()));
                         (*currentIt).eraseFromParent();
                     }
                     (*beginningIt).eraseFromParent();
