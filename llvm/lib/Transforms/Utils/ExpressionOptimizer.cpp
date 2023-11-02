@@ -353,21 +353,25 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
             case ExpressionOptimizerState::Initial:
                 beginningIt = itBB;
                 if (checkMiddle(BB, itBB, &firstOperand, &secondOperand, &middle)) {
-                    increaseIterator(itBB, 3);
+                    increaseIterator(itBB, 4);
                     state = ExpressionOptimizerState::Middle;
                 }
                 else if (checkSquared(BB, itBB, &firstOperand, &firstSquared)) {
-                    increaseIterator(itBB, 2);
+                    increaseIterator(itBB, 3);
                     state = ExpressionOptimizerState::Squared;
+                }
+                else {
+                    increaseIterator(itBB, 1);
+                    state = ExpressionOptimizerState::Initial;
                 }
                 break;
             case ExpressionOptimizerState::Squared:
                 if (checkSquaredMiddle(BB, itBB, &firstOperand, &secondOperand, &middle)) {
-                    increaseIterator(itBB, 3);
+                    increaseIterator(itBB, 4);
                     state = ExpressionOptimizerState::SquaredMiddle;
                 }
                 else if (checkSquaredSquared(BB, itBB, &secondOperand, &secondSquared)) {
-                    increaseIterator(itBB, 2);
+                    increaseIterator(itBB, 3);
                     state = ExpressionOptimizerState::SquaredSquared;
                 }
                 else {
@@ -376,7 +380,7 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                 break;
             case ExpressionOptimizerState::Middle:
                 if (checkMiddleSquared(BB, itBB, &firstOperand, &secondOperand, &firstSquared)) {
-                    increaseIterator(itBB, 2);
+                    increaseIterator(itBB, 3);
                     state = ExpressionOptimizerState::SquaredMiddle;
                 }
                 else {
@@ -385,6 +389,7 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                 break;
             case ExpressionOptimizerState::SquaredSquared:
                 if (checkAddSquaredSquared(BB, itBB, &firstSquared, &secondSquared, &firstAdd)) {
+                    increaseIterator(itBB, 1);
                     state = ExpressionOptimizerState::AddSquaredSquared;
                 }
                 else {
@@ -393,6 +398,7 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                 break;
             case ExpressionOptimizerState::SquaredMiddle:
                 if (checkAddSquaredMiddle(BB, itBB, &firstSquared, &middle, &firstAdd)) {
+                    increaseIterator(itBB, 1);
                     state = ExpressionOptimizerState::AddSquaredMiddle;
                 }
                 else {
@@ -401,7 +407,7 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                 break;
             case ExpressionOptimizerState::AddSquaredSquared:
                 if (checkAddSquaredSquaredMiddle(BB, itBB, &firstOperand, &secondOperand, &secondAdd)) {
-                    increaseIterator(itBB, 3);
+                    increaseIterator(itBB, 4);
                     state = ExpressionOptimizerState::AddSquaredMiddleSquared;
                 }
                 else {
@@ -410,7 +416,7 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                 break;
             case ExpressionOptimizerState::AddSquaredMiddle:
                 if (checkAddSquaredMiddleSquared(BB, itBB, &secondOperand, &secondAdd)) {
-                    increaseIterator(itBB, 2);
+                    increaseIterator(itBB, 3);
                     state = ExpressionOptimizerState::AddSquaredMiddleSquared;
                 }
                 else {
@@ -419,7 +425,8 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                 break;
             case ExpressionOptimizerState::AddSquaredMiddleSquared:
                 if (checkAddAddSquaredMiddleSquared(BB, itBB, &firstAdd, &secondAdd, &finalInst)) {
-                    endIt = itBB++;
+                    endIt = itBB;
+                    increaseIterator(itBB, 1);
 
                     LoadInst *newLoadInstFirstOperand = new LoadInst(IntegerType::get((*beginningIt).getContext(), 32), firstOperand, "", &*beginningIt);
                     LoadInst *newLoadInstSecondOperand = new LoadInst(IntegerType::get((*beginningIt).getContext(), 32), secondOperand, "", &*beginningIt);
@@ -434,15 +441,10 @@ PreservedAnalyses ExpressionOptimizer::run(Function &F, FunctionAnalysisManager 
                         (*currentIt).eraseFromParent();
                     }
                     (*beginningIt).eraseFromParent();
-
-                    state = ExpressionOptimizerState::Initial;
-                    continue;   // needed because itBB is already increased
                 }
                 state = ExpressionOptimizerState::Initial;
                 break;
             }
-
-            itBB++;
         }
     }
     return PreservedAnalyses::all();
