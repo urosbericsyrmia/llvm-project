@@ -27791,8 +27791,8 @@ static SDValue lowerAddSub(SDValue Op, SelectionDAG &DAG,
     SDValue operandValue = Op.getOperand(0);
     SDLoc dlValue(Op);
     MVT MVTValue = operandValue.getSimpleValueType();
-    return DAG.getNode(ISD::MUL, dlValue, MVTValue,
-        DAG.getConstant(2, dlValue, MVTValue),
+    return DAG.getNode(
+        ISD::MUL, dlValue, MVTValue, DAG.getConstant(2, dlValue, MVTValue),
         DAG.getNode(ISD::ANY_EXTEND, dlValue, MVTValue, operandValue));
   }
 
