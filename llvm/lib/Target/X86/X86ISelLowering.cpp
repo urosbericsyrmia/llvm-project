@@ -27786,6 +27786,16 @@ static SDValue LowerCTTZ(SDValue Op, const X86Subtarget &Subtarget,
 
 static SDValue lowerAddSub(SDValue Op, SelectionDAG &DAG,
                            const X86Subtarget &Subtarget) {
+
+  if (Op.getOpcode() == ISD::ADD && Op.getOperand(0) == Op.getOperand(1)) {
+    SDValue operandValue = Op.getOperand(0);
+    SDLoc dlValue(Op);
+    MVT MVTValue = operandValue.getSimpleValueType();
+    return DAG.getNode(ISD::MUL, dlValue, MVTValue,
+        DAG.getConstant(2, dlValue, MVTValue),
+        DAG.getNode(ISD::ANY_EXTEND, dlValue, MVTValue, operandValue));
+  }
+
   MVT VT = Op.getSimpleValueType();
   if (VT == MVT::i16 || VT == MVT::i32)
     return lowerAddSubToHorizontalOp(Op, DAG, Subtarget);
