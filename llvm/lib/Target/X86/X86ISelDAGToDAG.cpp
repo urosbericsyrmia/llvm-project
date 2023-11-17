@@ -5227,6 +5227,29 @@ void X86DAGToDAGISel::Select(SDNode *Node) {
   case ISD::ADD:
     if (Opcode == ISD::ADD && matchBitExtract(Node))
       return;
+    
+    if (Opcode == ISD::ADD && Node->getOperand(0) == Node->getOperand(1) &&
+      (NVT == MVT::i16 || NVT == MVT::i32 || NVT == MVT::i64)) {
+      SDValue operandValue = Node->getOperand(0);
+      MVT MVTValue = operandValue.getSimpleValueType();
+      SDValue constantValue = CurDAG->getTargetConstant(2, dl, MVTValue);
+      
+      unsigned ROpc;
+      switch (MVTValue.SimpleTy) {
+      default: llvm_unreachable("Unexpected VT!");
+      case MVT::i8: // TODO
+      case MVT::i16: ROpc = X86::IMUL16rri; break;
+      case MVT::i32: ROpc = X86::IMUL32rri; break;
+      case MVT::i64: ROpc = X86::IMUL64rri32; break;
+      }
+
+      SDValue newNode = CurDAG->getNode(ISD::MUL, dl, MVTValue, operandValue, constantValue);
+      CurDAG->ReplaceAllUsesWith(Node, newNode.getNode());
+      CurDAG->RemoveDeadNode(Node);
+      CurDAG->SelectNodeTo(newNode.getNode(), ROpc, MVTValue, MVTValue, operandValue, constantValue);
+      return;
+    }
+
     [[fallthrough]];
   case ISD::SUB: {
     // Try to avoid folding immediates with multiple uses for optsize.

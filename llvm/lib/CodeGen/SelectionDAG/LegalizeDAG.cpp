@@ -991,6 +991,7 @@ void SelectionDAGLegalize::LegalizeOp(SDNode *Node) {
   bool SimpleFinishLegalizing = true;
   switch (Node->getOpcode()) {
   case ISD::ADD:
+    // Action = TargetLowering::Legal;
     Action = TargetLowering::Custom;
     break;
   case ISD::INTRINSIC_W_CHAIN:
