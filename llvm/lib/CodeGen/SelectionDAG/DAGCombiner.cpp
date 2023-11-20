@@ -2949,6 +2949,117 @@ SDValue DAGCombiner::visitADD(SDNode *N) {
   EVT VT = N0.getValueType();
   SDLoc DL(N);
 
+  if (N->getOpcode() == ISD::ADD) {
+    do {
+      SDNode *addOne;
+      SDNode *addTwo;
+      SDNode *mulOne;
+      SDNode *mulTwo;
+      SDNode *mulThree;
+
+      addOne = N;
+      if (addOne->getOperand(0).getOpcode() == ISD::ADD && addOne->getOperand(1).getOpcode() == ISD::MUL) {
+        addTwo = addOne->getOperand(0).getNode();
+        mulOne = addOne->getOperand(1).getNode();
+      }
+      else if (addOne->getOperand(0).getOpcode() == ISD::MUL && addOne->getOperand(1).getOpcode() == ISD::ADD) {
+        addTwo = addOne->getOperand(1).getNode();
+        mulOne = addOne->getOperand(0).getNode();
+      }
+      else {
+        break;
+      }
+
+      if (addTwo->getOperand(0).getOpcode() == ISD::MUL && addTwo->getOperand(1).getOpcode() == ISD::MUL) {
+        mulTwo = addTwo->getOperand(0).getNode();
+        mulThree = addTwo->getOperand(1).getNode();
+      }
+      else {
+        break;
+      }
+
+      SDNode *squareOne;
+      SDNode *squareTwo;
+      SDNode *middle;
+
+      if (mulOne->getOperand(0).getOpcode() == ISD::MUL || mulOne->getOperand(1).getOpcode() == ISD::MUL) {
+        squareOne = mulTwo;
+        squareTwo = mulThree;
+        middle = mulOne;
+      }
+      else if (mulTwo->getOperand(0).getOpcode() == ISD::MUL || mulTwo->getOperand(1).getOpcode() == ISD::MUL) {
+        squareOne = mulOne;
+        squareTwo = mulThree;
+        middle = mulTwo;
+      }
+      else if (mulThree->getOperand(0).getOpcode() == ISD::MUL || mulThree->getOperand(1).getOpcode() == ISD::MUL) {
+        squareOne = mulOne;
+        squareTwo = mulTwo;
+        middle = mulThree;
+      }
+      else {
+        break;
+      }
+
+      SDNode *middleValue;
+      SDNode *middleMul;
+
+      if (middle->getOperand(0).getOpcode() == ISD::MUL) {
+        middleMul = middle->getOperand(0).getNode();
+        middleValue = middle->getOperand(1).getNode();
+      }
+      else {
+        middleMul = middle->getOperand(1).getNode();
+        middleValue = middle->getOperand(0).getNode();
+      }
+
+      if (squareOne->getOperand(0).getNode() != squareOne->getOperand(1).getNode()) {
+        break;
+      }
+      if (squareTwo->getOperand(0).getNode() != squareTwo->getOperand(1).getNode()) {
+        break;
+      }
+
+      const SDValue &operandOne = squareOne->getOperand(0);
+      const SDValue &operandTwo = squareTwo->getOperand(0);
+
+      SDNode *middleOperandOne;
+      SDNode *middleOperandTwo;
+      ConstantSDNode *middleValueTwo;
+
+      if (middleValue->getOpcode() == ISD::Constant) {
+        middleValueTwo = dyn_cast<ConstantSDNode>(middleValue);
+        middleOperandOne = middleMul->getOperand(0).getNode();
+        middleOperandTwo = middleMul->getOperand(1).getNode();
+      }
+      else if (middleMul->getOperand(0).getOpcode() == ISD::Constant) {
+        middleValueTwo = dyn_cast<ConstantSDNode>(middleMul->getOperand(0).getNode());
+        middleOperandOne = middleValue;
+        middleOperandTwo = middleMul->getOperand(1).getNode();
+      }
+      else if (middleMul->getOperand(1).getOpcode() == ISD::Constant) {
+        middleValueTwo = dyn_cast<ConstantSDNode>(middleMul->getOperand(1).getNode());
+        middleOperandOne = middleValue;
+        middleOperandTwo = middleMul->getOperand(0).getNode();
+      }
+
+      if (middleValueTwo->getAPIntValue() != 2) {
+        break;
+      }
+      
+      if (!((operandOne.getNode() == middleOperandOne && operandTwo.getNode() == middleOperandTwo) ||
+        (operandOne.getNode() == middleOperandTwo && operandTwo.getNode() == middleOperandOne))) {
+        break;
+      }
+
+      SDValue addition = DAG.getNode(ISD::ADD, DL, N->getValueType(0), operandOne, operandTwo);
+      SDValue multiplication = DAG.getNode(ISD::MUL, DL, N->getValueType(0), addition, addition);
+
+      return multiplication;
+
+    } while (false);
+  }
+
   if (SDValue Combined = visitADDLike(N))
     return Combined;
 
